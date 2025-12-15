@@ -40,6 +40,9 @@ function init() {
     
     // Очистка старых комнат
     cleanupOldRooms();
+    
+    // Восстанавливаем звуки
+    restoreSounds();
 }
 
 function loadSavedData() {
@@ -60,6 +63,13 @@ function saveData() {
     localStorage.setItem('guessWhoIsHost', isHost.toString());
     
     console.log('💾 Сохранены данные:', { playerName, roomCode, isHost, gameMode });
+}
+
+// ===== ВОССТАНОВЛЕНИЕ ЗВУКОВ =====
+function restoreSounds() {
+    console.log('🔊 Восстановление звуков');
+    // Функция для воспроизведения звуков будет добавлена позже
+    // Сейчас просто убедимся что звуковые файлы доступны
 }
 
 // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
@@ -191,6 +201,21 @@ function setupEventHandlers() {
             closeModal('guessModal');
         });
     }
+    
+    // Кнопки закрытия ошибок
+    const closeErrorBtn2 = document.getElementById('closeErrorBtn2');
+    if (closeErrorBtn2) {
+        closeErrorBtn2.addEventListener('click', function() {
+            closeModal('errorModal');
+        });
+    }
+    
+    const closeLobbyErrorBtn2 = document.getElementById('closeLobbyErrorBtn2');
+    if (closeLobbyErrorBtn2) {
+        closeLobbyErrorBtn2.addEventListener('click', function() {
+            closeModal('lobbyErrorModal');
+        });
+    }
 }
 
 function handleLanguageToggle() {
@@ -238,12 +263,6 @@ function initIndexPage() {
         codeInput.value = joinCode.toUpperCase();
         roomCode = joinCode.toUpperCase();
         saveData();
-        
-        // Если имя уже есть, автоматически присоединяемся
-        if (playerName && playerName.length >= 1) {
-            console.log('🔗 Автоматическое присоединение по ссылке');
-            setTimeout(() => joinRoom(), 500);
-        }
     }
     
     if (nameInput) {
@@ -257,6 +276,15 @@ function initIndexPage() {
         codeInput.addEventListener('input', function() {
             roomCode = this.value.toUpperCase();
             saveData();
+        });
+    }
+    
+    // Добавляем обработчик Enter для поля кода
+    if (codeInput) {
+        codeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                joinRoom();
+            }
         });
     }
 }
@@ -275,7 +303,10 @@ function initGamePage() {
             // Проверяем существование комнаты
             const roomData = getRoomData();
             if (!roomData) {
+                console.log('⚠️ Комната не найдена, создаем новую');
                 createRoomInStorage();
+            } else {
+                console.log('✅ Комната найдена:', roomData);
             }
         }
     }
@@ -318,15 +349,25 @@ function initPlayPage() {
     // Загружаем состояние игры
     const savedGameState = localStorage.getItem(`guessWhoGameState_${roomCode}`);
     if (savedGameState) {
-        gameState = JSON.parse(savedGameState);
-        console.log('📊 Состояние игры загружено:', gameState);
+        try {
+            gameState = JSON.parse(savedGameState);
+            console.log('📊 Состояние игры загружено:', gameState);
+        } catch (e) {
+            console.error('❌ Ошибка парсинга состояния игры:', e);
+            gameState = null;
+        }
+    }
+    
+    if (!gameState) {
+        console.error('❌ Состояние игры не найдено, перенаправляем в лобби');
+        window.location.href = 'game.html';
+        return;
     }
     
     showPlayerRole();
     
     // Показываем кнопку завершения игры только хосту
     const endGameBtn = document.getElementById('endGameBtn');
-    
     if (endGameBtn) {
         endGameBtn.classList.toggle('hidden', !isHost);
     }
@@ -429,7 +470,8 @@ function getTranslation(key) {
             'hostOnly': '❗️Только хост может начать игру',
             'roomFull': '❗️Комната заполнена (максимум 6 игроков)',
             'roomNotFound': '❌ Такого лобби не существует',
-            'kickPlayer': 'Исключить'
+            'kickPlayer': 'Исключить',
+            'roomJoinError': '❌ Не удалось присоединиться к комнате'
         },
         en: {
             'rules': 'Rules',
@@ -494,7 +536,8 @@ function getTranslation(key) {
             'hostOnly': '❗️Only host can start the game',
             'roomFull': '❗️Room is full (maximum 6 players)',
             'roomNotFound': '❌ Room not found',
-            'kickPlayer': 'Kick'
+            'kickPlayer': 'Kick',
+            'roomJoinError': '❌ Failed to join room'
         }
     };
     
@@ -614,7 +657,18 @@ function createRoomInStorage() {
 }
 
 function getRoomData() {
-    return JSON.parse(localStorage.getItem(`guessWhoRoom_${roomCode}`) || 'null');
+    const data = localStorage.getItem(`guessWhoRoom_${roomCode}`);
+    if (!data) {
+        console.log('❌ Данные комнаты не найдены для кода:', roomCode);
+        return null;
+    }
+    
+    try {
+        return JSON.parse(data);
+    } catch (e) {
+        console.error('❌ Ошибка парсинга данных комнаты:', e);
+        return null;
+    }
 }
 
 function checkAutoJoin() {
@@ -626,24 +680,12 @@ function checkAutoJoin() {
         
         const codeInput = document.getElementById('roomCode');
         if (codeInput) {
-            codeInput.value = joinCode.toUpperCase();
-            roomCode = joinCode.toUpperCase();
+            const code = joinCode.toUpperCase();
+            codeInput.value = code;
+            roomCode = code;
             saveData();
             
-            // Если имя уже есть, проверяем комнату и присоединяемся
-            if (playerName && playerName.length >= 1) {
-                console.log('🔗 Попытка авто-присоединения...');
-                setTimeout(() => {
-                    const roomData = getRoomData();
-                    if (roomData) {
-                        console.log('✅ Комната найдена, присоединяемся');
-                        joinRoom();
-                    } else {
-                        console.log('❌ Комната не найдена');
-                        showNotification('❌ Такого лобби не существует');
-                    }
-                }, 100);
-            }
+            console.log('🔗 Код из URL установлен:', code);
         }
     }
 }
@@ -654,7 +696,10 @@ function joinRoom() {
     const nameInput = document.getElementById('playerName');
     const codeInput = document.getElementById('roomCode');
     
-    if (!nameInput || !codeInput) return;
+    if (!nameInput || !codeInput) {
+        console.error('❌ Не найдены поля ввода');
+        return;
+    }
     
     playerName = nameInput.value.trim();
     roomCode = codeInput.value.toUpperCase().trim();
@@ -677,10 +722,12 @@ function joinRoom() {
     const roomData = getRoomData();
     
     if (!roomData) {
-        console.log('❌ Комната не найдена');
+        console.log('❌ Комната не найдена:', roomCode);
         showLobbyError(getTranslation('roomNotFound'));
         return;
     }
+    
+    console.log('✅ Комната найдена:', roomData);
     
     // Проверяем, не заблокирован ли игрок
     const blockedPlayers = JSON.parse(localStorage.getItem(`guessWhoBlocked_${roomCode}`) || '[]');
@@ -1039,21 +1086,20 @@ function endGame() {
 function showPlayerRole() {
     console.log('🎭 Показ роли игрока');
     
-    // Загружаем общее состояние игры
-    const savedGameState = localStorage.getItem(`guessWhoGameState_${roomCode}`);
-    if (savedGameState) {
-        gameState = JSON.parse(savedGameState);
-        
-        // Определяем является ли текущий игрок шпионом
-        gameState.isSpy = playerName === gameState.actualSpy;
-        gameState.playerCard = gameState.isSpy ? '???' : gameState.correctCard;
-        gameState.hasVoted = false;
-        gameState.hasGuessed = false;
-        gameState.readyPlayers = 0;
-        
-        console.log('🎭 Роль игрока:', gameState.isSpy ? 'Шпион' : 'Игрок');
-        console.log('🎴 Карта для игры:', gameState.correctCard);
+    if (!gameState) {
+        console.error('❌ Нет состояния игры');
+        return;
     }
+    
+    // Определяем является ли текущий игрок шпионом
+    gameState.isSpy = playerName === gameState.actualSpy;
+    gameState.playerCard = gameState.isSpy ? '???' : gameState.correctCard;
+    gameState.hasVoted = false;
+    gameState.hasGuessed = false;
+    gameState.readyPlayers = 0;
+    
+    console.log('🎭 Роль игрока:', gameState.isSpy ? 'Шпион' : 'Игрок');
+    console.log('🎴 Карта для игры:', gameState.correctCard);
     
     const roleHeader = document.getElementById('roleHeader');
     const roleTaskText = document.getElementById('roleTaskText');
@@ -1120,15 +1166,17 @@ function showPlayerRole() {
 
 function updateReadyCounter() {
     const readyCounter = document.getElementById('readyCounter');
-    if (readyCounter) {
-        readyCounter.innerHTML = `Запомнили карту: ${gameState.readyPlayers}/${gameState.totalPlayers}`;
+    if (readyCounter && gameState) {
+        readyCounter.innerHTML = `Запомнили карту: ${gameState.readyPlayers || 0}/${gameState.totalPlayers || 0}`;
     }
 }
 
 function closeRoleModal() {
     console.log('✅ Закрытие модального окна роли');
     
-    gameState.readyPlayers++;
+    if (!gameState) return;
+    
+    gameState.readyPlayers = (gameState.readyPlayers || 0) + 1;
     
     // Сохраняем обновленное состояние
     localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameState));
@@ -1150,6 +1198,8 @@ function closeRoleModal() {
 
 function startGameTimer() {
     console.log('⏰ Запуск таймера игры');
+    if (!gameState) return;
+    
     gameState.phase = 'discussion';
     updateTimerDisplay();
     
@@ -1166,6 +1216,8 @@ function startGameTimer() {
 
 function startVotingPhase() {
     console.log('🗳️ Начало фазы голосования');
+    if (!gameState) return;
+    
     gameState.phase = 'voting';
     localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameState));
     
@@ -1190,6 +1242,8 @@ function startVotingPhase() {
 }
 
 function updateTimerDisplay() {
+    if (!gameState) return;
+    
     const gameTimer = document.getElementById('gameTimer');
     const voteTimer = document.getElementById('voteTimer');
     
@@ -1208,7 +1262,7 @@ function updateTimerDisplay() {
 
 function setupVotingPlayers() {
     const playersToVote = document.getElementById('playersToVote');
-    if (!playersToVote) return;
+    if (!playersToVote || !gameState) return;
     
     playersToVote.innerHTML = '';
     
@@ -1231,7 +1285,7 @@ function setupVotingPlayers() {
 }
 
 function voteForPlayer(playerName, buttonElement) {
-    if (gameState.hasVoted) return;
+    if (!gameState || gameState.hasVoted) return;
     
     gameState.hasVoted = true;
     gameState.votes[playerName] = (gameState.votes[playerName] || 0) + 1;
@@ -1252,7 +1306,7 @@ function voteForPlayer(playerName, buttonElement) {
 
 function setupGuessCards() {
     const cardsGrid = document.getElementById('cardsGrid');
-    if (!cardsGrid) return;
+    if (!cardsGrid || !gameState) return;
     
     cardsGrid.innerHTML = '';
     
@@ -1282,7 +1336,7 @@ function setupGuessCards() {
 }
 
 function selectCard(card, cardElement) {
-    if (gameState.hasGuessed) return;
+    if (!gameState || gameState.hasGuessed) return;
     
     gameState.hasGuessed = true;
     
@@ -1303,6 +1357,8 @@ function selectCard(card, cardElement) {
 }
 
 function checkVotingResults() {
+    if (!gameState) return;
+    
     const votedPlayers = Object.keys(gameState.votes);
     
     if (votedPlayers.length === 0) {
@@ -1331,8 +1387,10 @@ function checkVotingResults() {
 function endGameResult(winner, reason) {
     console.log('🏆 Результат игры:', winner, reason);
     
-    gameState.phase = 'ended';
-    localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameState));
+    if (gameState) {
+        gameState.phase = 'ended';
+        localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameState));
+    }
     
     const resultModal = document.getElementById('resultModal');
     const resultTitle = document.getElementById('resultTitle');
