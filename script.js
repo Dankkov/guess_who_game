@@ -7,7 +7,7 @@ let currentPage = '';
 let gameMode = 'classic';
 let gameState = null;
 
-// Карты игры (рандомный порядок каждый раз)
+// Карты игры
 const gameCards = [
     { id: 1, name: 'Лучницы', enName: 'Archers', image: 'images/cards/1.png' },
     { id: 2, name: 'Дракончик', enName: 'Baby Dragon', image: 'images/cards/2.png' },
@@ -18,6 +18,16 @@ const gameCards = [
     { id: 7, name: 'Ведьма', enName: 'Witch', image: 'images/cards/7.png' },
     { id: 8, name: 'Принц', enName: 'Prince', image: 'images/cards/8.png' }
 ];
+
+// Звуки
+const sounds = {
+    click: 'sounds/click.wav',
+    join: 'sounds/join.wav',
+    start: 'sounds/start.wav',
+    vote: 'sounds/vote.wav',
+    win: 'sounds/win.wav',
+    lose: 'sounds/lose.wav'
+};
 
 // ===== ОСНОВНЫЕ ФУНКЦИИ =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -35,14 +45,8 @@ function init() {
     updateFlagIcon();
     initPage();
     
-    // Проверяем параметры URL для авто-присоединения
-    checkAutoJoin();
-    
     // Очистка старых комнат
     cleanupOldRooms();
-    
-    // Восстанавливаем звуки
-    restoreSounds();
 }
 
 function loadSavedData() {
@@ -61,98 +65,67 @@ function saveData() {
     if (playerName) localStorage.setItem('guessWhoPlayerName', playerName);
     if (roomCode) localStorage.setItem('guessWhoRoomCode', roomCode);
     localStorage.setItem('guessWhoIsHost', isHost.toString());
-    
-    console.log('💾 Сохранены данные:', { playerName, roomCode, isHost, gameMode });
 }
 
-// ===== ВОССТАНОВЛЕНИЕ ЗВУКОВ =====
-function restoreSounds() {
-    console.log('🔊 Восстановление звуков');
-    // Функция для воспроизведения звуков будет добавлена позже
-    // Сейчас просто убедимся что звуковые файлы доступны
+// ===== ЗВУКИ =====
+function playSound(soundName) {
+    try {
+        const audio = new Audio(sounds[soundName]);
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log('Звук не воспроизведен:', e));
+    } catch (e) {
+        console.log('Ошибка воспроизведения звука:', e);
+    }
 }
 
 // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
 function setupEventHandlers() {
     console.log('⚙️ Настройка обработчиков событий');
     
+    // Все кнопки воспроизводят звук клика
+    document.querySelectorAll('button, a').forEach(btn => {
+        btn.addEventListener('click', () => playSound('click'));
+    });
+    
     // Кнопка языка
     const langBtn = document.getElementById('langBtn');
-    if (langBtn) {
-        langBtn.addEventListener('click', handleLanguageToggle);
-    }
+    if (langBtn) langBtn.addEventListener('click', handleLanguageToggle);
     
     // Кнопка правил
     const rulesBtn = document.getElementById('rulesBtn');
-    if (rulesBtn) {
-        rulesBtn.addEventListener('click', function() {
-            openModal('rulesModal');
-        });
-    }
+    if (rulesBtn) rulesBtn.addEventListener('click', () => openModal('rulesModal'));
     
     // Создание комнаты
     const createRoomBtn = document.getElementById('createRoomBtn');
-    if (createRoomBtn) {
-        createRoomBtn.addEventListener('click', function() {
-            createRoom();
-        });
-    }
+    if (createRoomBtn) createRoomBtn.addEventListener('click', createRoom);
     
     // Присоединение к комнате
     const joinRoomBtn = document.getElementById('joinRoomBtn');
-    if (joinRoomBtn) {
-        joinRoomBtn.addEventListener('click', function() {
-            joinRoom();
-        });
-    }
+    if (joinRoomBtn) joinRoomBtn.addEventListener('click', joinRoom);
     
     // Кнопка "Назад" в лобби
     const backBtn = document.getElementById('backBtn');
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            window.location.href = 'index.html';
-        });
-    }
+    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'index.html');
     
     // Копирование кода комнаты
     const copyCodeBtn = document.getElementById('copyCodeBtn');
-    if (copyCodeBtn) {
-        copyCodeBtn.addEventListener('click', function() {
-            copyRoomCode();
-        });
-    }
+    if (copyCodeBtn) copyCodeBtn.addEventListener('click', copyRoomCode);
     
     // Приглашение друга
     const inviteBtn = document.getElementById('inviteBtn');
-    if (inviteBtn) {
-        inviteBtn.addEventListener('click', function() {
-            openModal('inviteModal');
-        });
-    }
+    if (inviteBtn) inviteBtn.addEventListener('click', () => openModal('inviteModal'));
     
     // Копирование ссылки приглашения
     const copyLinkBtn = document.getElementById('copyLinkBtn');
-    if (copyLinkBtn) {
-        copyLinkBtn.addEventListener('click', function() {
-            copyInviteLink();
-        });
-    }
+    if (copyLinkBtn) copyLinkBtn.addEventListener('click', copyInviteLink);
     
     // Начало игры
     const startGameBtn = document.getElementById('startGameBtn');
-    if (startGameBtn) {
-        startGameBtn.addEventListener('click', function() {
-            startGame();
-        });
-    }
+    if (startGameBtn) startGameBtn.addEventListener('click', startGame);
     
     // Завершение игры в play.html
     const endGameBtn = document.getElementById('endGameBtn');
-    if (endGameBtn) {
-        endGameBtn.addEventListener('click', function() {
-            endGame();
-        });
-    }
+    if (endGameBtn) endGameBtn.addEventListener('click', endGame);
     
     // Закрытие модальных окон
     document.querySelectorAll('.close-modal, .btn-clear').forEach(btn => {
@@ -174,48 +147,30 @@ function setupEventHandlers() {
     
     // Игровые кнопки
     const closeRoleBtn2 = document.getElementById('closeRoleBtn2');
-    if (closeRoleBtn2) {
-        closeRoleBtn2.addEventListener('click', function() {
-            closeRoleModal();
-        });
-    }
+    if (closeRoleBtn2) closeRoleBtn2.addEventListener('click', closeRoleModal);
     
     const guessCardBtn = document.getElementById('guessCardBtn');
-    if (guessCardBtn) {
-        guessCardBtn.addEventListener('click', function() {
-            openModal('guessModal');
-            setupGuessCards();
-        });
-    }
+    if (guessCardBtn) guessCardBtn.addEventListener('click', function() {
+        openModal('guessModal');
+        setupGuessCards();
+    });
     
     const backToLobbyBtn = document.getElementById('backToLobbyBtn');
-    if (backToLobbyBtn) {
-        backToLobbyBtn.addEventListener('click', function() {
-            window.location.href = 'game.html';
-        });
-    }
+    if (backToLobbyBtn) backToLobbyBtn.addEventListener('click', () => window.location.href = 'game.html');
     
     const closeGuessBtn = document.getElementById('closeGuessBtn');
-    if (closeGuessBtn) {
-        closeGuessBtn.addEventListener('click', function() {
-            closeModal('guessModal');
-        });
-    }
+    if (closeGuessBtn) closeGuessBtn.addEventListener('click', () => closeModal('guessModal'));
     
-    // Кнопки закрытия ошибок
+    // Закрытие окон ошибок
     const closeErrorBtn2 = document.getElementById('closeErrorBtn2');
-    if (closeErrorBtn2) {
-        closeErrorBtn2.addEventListener('click', function() {
-            closeModal('errorModal');
-        });
-    }
+    if (closeErrorBtn2) closeErrorBtn2.addEventListener('click', () => closeModal('errorModal'));
     
     const closeLobbyErrorBtn2 = document.getElementById('closeLobbyErrorBtn2');
-    if (closeLobbyErrorBtn2) {
-        closeLobbyErrorBtn2.addEventListener('click', function() {
-            closeModal('lobbyErrorModal');
-        });
-    }
+    if (closeLobbyErrorBtn2) closeLobbyErrorBtn2.addEventListener('click', () => closeModal('lobbyErrorModal'));
+    
+    // Приглашение - закрытие
+    const closeInviteBtn2 = document.getElementById('closeInviteBtn2');
+    if (closeInviteBtn2) closeInviteBtn2.addEventListener('click', () => closeModal('inviteModal'));
 }
 
 function handleLanguageToggle() {
@@ -223,6 +178,7 @@ function handleLanguageToggle() {
     applyLanguage();
     saveData();
     updateFlagIcon();
+    playSound('click');
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ СТРАНИЦ =====
@@ -248,21 +204,26 @@ function initIndexPage() {
     const nameInput = document.getElementById('playerName');
     const codeInput = document.getElementById('roomCode');
     
-    if (nameInput && playerName) {
-        nameInput.value = playerName;
-    }
+    if (nameInput && playerName) nameInput.value = playerName;
+    if (codeInput && roomCode) codeInput.value = roomCode;
     
-    if (codeInput && roomCode) {
-        codeInput.value = roomCode;
-    }
-    
-    // Авто-заполнение кода из URL
+    // Проверяем ссылку приглашения
     const urlParams = new URLSearchParams(window.location.search);
     const joinCode = urlParams.get('join');
     if (joinCode && codeInput) {
-        codeInput.value = joinCode.toUpperCase();
-        roomCode = joinCode.toUpperCase();
+        const code = joinCode.toUpperCase();
+        codeInput.value = code;
+        roomCode = code;
         saveData();
+        console.log('🔗 Код из ссылки установлен:', code);
+        
+        // Если имя уже введено - сразу пытаемся присоединиться
+        if (playerName && playerName.length >= 1) {
+            console.log('🔄 Авто-присоединение...');
+            setTimeout(() => {
+                joinRoom();
+            }, 300);
+        }
     }
     
     if (nameInput) {
@@ -277,10 +238,8 @@ function initIndexPage() {
             roomCode = this.value.toUpperCase();
             saveData();
         });
-    }
-    
-    // Добавляем обработчик Enter для поля кода
-    if (codeInput) {
+        
+        // Enter для присоединения
         codeInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 joinRoom();
@@ -294,13 +253,13 @@ function initGamePage() {
     
     // Если хост, создаем комнату если ее нет
     if (isHost) {
+        console.log('👑 Вы - хост, проверяем комнату...');
         if (!roomCode) {
             roomCode = generateUniqueRoomCode();
-            console.log('🔑 Сгенерирован уникальный код комнаты:', roomCode);
+            console.log('🔑 Сгенерирован код комнаты:', roomCode);
             saveData();
             createRoomInStorage();
         } else {
-            // Проверяем существование комнаты
             const roomData = getRoomData();
             if (!roomData) {
                 console.log('⚠️ Комната не найдена, создаем новую');
@@ -308,6 +267,15 @@ function initGamePage() {
             } else {
                 console.log('✅ Комната найдена:', roomData);
             }
+        }
+    } else {
+        console.log('👤 Вы - игрок, проверяем комнату...');
+        const roomData = getRoomData();
+        if (!roomData) {
+            console.error('❌ Комната не найдена! Перенаправляем на главную');
+            showLobbyError(getTranslation('roomNotFound'));
+            setTimeout(() => window.location.href = 'index.html', 2000);
+            return;
         }
     }
     
@@ -330,12 +298,6 @@ function initGamePage() {
         }
     });
     
-    // Скрываем кнопку завершения игры в лобби
-    const endGameBtn = document.getElementById('endGameBtn');
-    if (endGameBtn) {
-        endGameBtn.classList.add('hidden');
-    }
-    
     // Загружаем список игроков сразу
     updatePlayersList();
     
@@ -346,27 +308,24 @@ function initGamePage() {
 function initPlayPage() {
     console.log('🎲 Инициализация игровой страницы');
     
-    // Загружаем состояние игры
     const savedGameState = localStorage.getItem(`guessWhoGameState_${roomCode}`);
     if (savedGameState) {
         try {
             gameState = JSON.parse(savedGameState);
             console.log('📊 Состояние игры загружено:', gameState);
         } catch (e) {
-            console.error('❌ Ошибка парсинга состояния игры:', e);
-            gameState = null;
+            console.error('❌ Ошибка парсинга состояния игры');
+            window.location.href = 'game.html';
+            return;
         }
-    }
-    
-    if (!gameState) {
-        console.error('❌ Состояние игры не найдено, перенаправляем в лобби');
+    } else {
+        console.error('❌ Состояние игры не найдено');
         window.location.href = 'game.html';
         return;
     }
     
     showPlayerRole();
     
-    // Показываем кнопку завершения игры только хосту
     const endGameBtn = document.getElementById('endGameBtn');
     if (endGameBtn) {
         endGameBtn.classList.toggle('hidden', !isHost);
@@ -470,8 +429,7 @@ function getTranslation(key) {
             'hostOnly': '❗️Только хост может начать игру',
             'roomFull': '❗️Комната заполнена (максимум 6 игроков)',
             'roomNotFound': '❌ Такого лобби не существует',
-            'kickPlayer': 'Исключить',
-            'roomJoinError': '❌ Не удалось присоединиться к комнате'
+            'kickPlayer': 'Исключить'
         },
         en: {
             'rules': 'Rules',
@@ -536,8 +494,7 @@ function getTranslation(key) {
             'hostOnly': '❗️Only host can start the game',
             'roomFull': '❗️Room is full (maximum 6 players)',
             'roomNotFound': '❌ Room not found',
-            'kickPlayer': 'Kick',
-            'roomJoinError': '❌ Failed to join room'
+            'kickPlayer': 'Kick'
         }
     };
     
@@ -567,7 +524,6 @@ function closeModal(modalId) {
 function generateUniqueRoomCode() {
     console.log('🔑 Генерация уникального кода комнаты...');
     
-    // Проверяем все существующие коды
     const existingCodes = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -577,7 +533,6 @@ function generateUniqueRoomCode() {
         }
     }
     
-    // Генерируем уникальный код
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let attempts = 0;
     let code;
@@ -590,7 +545,6 @@ function generateUniqueRoomCode() {
         attempts++;
         
         if (attempts > 100) {
-            console.error('Не удалось сгенерировать уникальный код');
             return 'ERR' + Math.floor(Math.random() * 1000);
         }
     } while (existingCodes.includes(code));
@@ -621,14 +575,10 @@ function createRoom() {
         return;
     }
     
-    // Генерируем УНИКАЛЬНЫЙ код комнаты
     roomCode = generateUniqueRoomCode();
     isHost = true;
     
-    // Сохраняем данные
     saveData();
-    
-    // Создаем комнату в localStorage
     createRoomInStorage();
     
     console.log('➡️ Переход в лобби');
@@ -653,41 +603,13 @@ function createRoomInStorage() {
     };
     
     localStorage.setItem(`guessWhoRoom_${roomCode}`, JSON.stringify(roomData));
-    console.log('✅ Комната создана:', roomData);
+    console.log('✅ Комната создана');
 }
 
 function getRoomData() {
+    if (!roomCode) return null;
     const data = localStorage.getItem(`guessWhoRoom_${roomCode}`);
-    if (!data) {
-        console.log('❌ Данные комнаты не найдены для кода:', roomCode);
-        return null;
-    }
-    
-    try {
-        return JSON.parse(data);
-    } catch (e) {
-        console.error('❌ Ошибка парсинга данных комнаты:', e);
-        return null;
-    }
-}
-
-function checkAutoJoin() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const joinCode = urlParams.get('join');
-    
-    if (joinCode && currentPage === 'index.html') {
-        console.log('🔍 Проверка авто-присоединения по коду:', joinCode);
-        
-        const codeInput = document.getElementById('roomCode');
-        if (codeInput) {
-            const code = joinCode.toUpperCase();
-            codeInput.value = code;
-            roomCode = code;
-            saveData();
-            
-            console.log('🔗 Код из URL установлен:', code);
-        }
-    }
+    return data ? JSON.parse(data) : null;
 }
 
 function joinRoom() {
@@ -697,14 +619,14 @@ function joinRoom() {
     const codeInput = document.getElementById('roomCode');
     
     if (!nameInput || !codeInput) {
-        console.error('❌ Не найдены поля ввода');
+        console.error('❌ Поля не найдены');
         return;
     }
     
     playerName = nameInput.value.trim();
     roomCode = codeInput.value.toUpperCase().trim();
     
-    console.log('📋 Данные для присоединения:', { playerName, roomCode });
+    console.log('📋 Данные:', { playerName, roomCode });
     
     if (!validateName(playerName)) {
         console.log('❌ Невалидное имя');
@@ -713,12 +635,11 @@ function joinRoom() {
     }
     
     if (!roomCode || roomCode.length !== 4) {
-        console.log('❌ Невалидный код комнаты');
+        console.log('❌ Невалидный код');
         showLobbyError(getTranslation('noRoomCode'));
         return;
     }
     
-    // Проверяем существование комнаты
     const roomData = getRoomData();
     
     if (!roomData) {
@@ -727,21 +648,19 @@ function joinRoom() {
         return;
     }
     
-    console.log('✅ Комната найдена:', roomData);
-    
-    // Проверяем, не заблокирован ли игрок
+    // Проверка на заблокированного игрока
     const blockedPlayers = JSON.parse(localStorage.getItem(`guessWhoBlocked_${roomCode}`) || '[]');
     if (blockedPlayers.includes(playerName)) {
         console.log('🚫 Игрок заблокирован');
-        showLobbyError('Вы были исключены из этого лобби и не можете присоединиться снова!');
+        showLobbyError('Вы были исключены из лобби!');
         return;
     }
     
-    // Проверяем наличие игрока с таким именем
+    // Проверка на повторное имя
     const playerExists = roomData.players.some(p => p.name === playerName);
     if (playerExists) {
-        console.log('⚠️ Игрок с таким именем уже существует');
-        showLobbyError('Игрок с таким именем уже есть в комнате!');
+        console.log('⚠️ Игрок уже есть');
+        showLobbyError('Игрок с таким именем уже есть!');
         return;
     }
     
@@ -754,7 +673,7 @@ function joinRoom() {
     isHost = false;
     saveData();
     
-    // Добавляем игрока в комнату
+    // Добавляем игрока
     roomData.players.push({
         name: playerName,
         isHost: false,
@@ -765,13 +684,14 @@ function joinRoom() {
     roomData.lastActivity = Date.now();
     localStorage.setItem(`guessWhoRoom_${roomCode}`, JSON.stringify(roomData));
     
-    console.log('✅ Игрок добавлен, переход в лобби');
+    playSound('join');
+    console.log('✅ Переход в лобби');
     window.location.href = 'game.html';
 }
 
 function selectGameMode(element) {
     if (!isHost) {
-        showNotification('Только хост может менять режим игры!');
+        showNotification('Только хост может менять режим!');
         return;
     }
     
@@ -781,24 +701,23 @@ function selectGameMode(element) {
     element.classList.add('active');
     gameMode = element.getAttribute('data-mode');
     
-    // Обновляем режим в комнате
     const roomData = getRoomData();
     if (roomData) {
         roomData.gameMode = gameMode;
-        roomData.lastActivity = Date.now();
         localStorage.setItem(`guessWhoRoom_${roomCode}`, JSON.stringify(roomData));
     }
     
     saveData();
+    playSound('click');
 }
 
 function showLobbyError(message) {
-    console.log('🚨 Показ ошибки лобби:', message);
+    console.log('🚨 Ошибка:', message);
     const errorText = document.getElementById('lobbyErrorText');
     if (errorText) {
         errorText.innerHTML = message;
+        openModal('lobbyErrorModal');
     }
-    openModal('lobbyErrorModal');
 }
 
 function updateInviteLink() {
@@ -806,16 +725,16 @@ function updateInviteLink() {
     if (inviteLink && roomCode) {
         const currentUrl = window.location.origin + window.location.pathname.replace('game.html', '');
         inviteLink.value = `${currentUrl}index.html?join=${roomCode}`;
-        console.log('🔗 Ссылка приглашения обновлена:', inviteLink.value);
+        console.log('🔗 Ссылка обновлена');
     }
 }
 
 function copyRoomCode() {
     const codeDisplay = document.getElementById('roomCodeDisplay');
-    if (codeDisplay && codeDisplay.textContent) {
+    if (codeDisplay && codeDisplay.textContent && codeDisplay.textContent !== 'XXXX') {
         navigator.clipboard.writeText(codeDisplay.textContent)
             .then(() => showNotification('✅ Код скопирован!'))
-            .catch(() => showNotification('❌ Не удалось скопировать код'));
+            .catch(() => showNotification('❌ Ошибка копирования'));
     }
 }
 
@@ -824,13 +743,13 @@ function copyInviteLink() {
     if (inviteLink && inviteLink.value) {
         navigator.clipboard.writeText(inviteLink.value)
             .then(() => showNotification('✅ Ссылка скопирована!'))
-            .catch(() => showNotification('❌ Не удалось скопировать ссылку'));
+            .catch(() => showNotification('❌ Ошибка копирования'));
     }
 }
 
 function showNotification(message) {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) existingNotification.remove();
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
     
     const notification = document.createElement('div');
     notification.className = 'notification';
@@ -861,15 +780,12 @@ function updatePlayersList() {
     const playersList = document.getElementById('playersList');
     const playersCount = document.getElementById('playersCount');
     
-    if (!playersList) {
-        return; // Элемента нет на этой странице
-    }
+    if (!playersList) return;
     
-    // Получаем данные комнаты
     const roomData = getRoomData();
     const players = roomData?.players || [];
     
-    console.log('👥 Обновление списка игроков:', players.length, 'игроков');
+    console.log('👥 Игроков:', players.length);
     
     playersList.innerHTML = '';
     
@@ -881,11 +797,10 @@ function updatePlayersList() {
             </div>
         `;
     } else {
-        players.forEach((player, index) => {
+        players.forEach(player => {
             const playerItem = document.createElement('div');
             playerItem.className = player.isHost ? 'player-item host' : 'player-item';
             
-            // Кнопка исключения для хоста (кроме себя)
             let kickButton = '';
             if (isHost && player.name !== playerName) {
                 kickButton = `
@@ -914,38 +829,32 @@ function updatePlayersList() {
         playersCount.textContent = `${players.length}/6`;
     }
     
-    // Обновляем время активности комнаты
     if (players.length > 0 && roomData) {
         roomData.lastActivity = Date.now();
         localStorage.setItem(`guessWhoRoom_${roomCode}`, JSON.stringify(roomData));
     }
 }
 
-// Функция исключения игрока
 function kickPlayer(playerNameToKick) {
-    console.log('🚫 Исключение игрока:', playerNameToKick);
+    console.log('🚫 Исключение:', playerNameToKick);
     
     if (!isHost) {
-        showNotification('Только хост может исключать игроков!');
+        showNotification('Только хост может исключать!');
         return;
     }
     
-    if (confirm(`Вы уверены, что хотите исключить игрока ${playerNameToKick}?`)) {
+    if (confirm(`Исключить ${playerNameToKick}?`)) {
         const roomData = getRoomData();
         if (!roomData) return;
         
-        // Удаляем игрока из списка
-        roomData.players = roomData.players.filter(player => player.name !== playerNameToKick);
-        
-        // Сохраняем обновленные данные
+        roomData.players = roomData.players.filter(p => p.name !== playerNameToKick);
         localStorage.setItem(`guessWhoRoom_${roomCode}`, JSON.stringify(roomData));
         
-        // Создаем список заблокированных игроков для этой комнаты
-        let blockedPlayers = JSON.parse(localStorage.getItem(`guessWhoBlocked_${roomCode}`) || '[]');
-        blockedPlayers.push(playerNameToKick);
-        localStorage.setItem(`guessWhoBlocked_${roomCode}`, JSON.stringify(blockedPlayers));
+        let blocked = JSON.parse(localStorage.getItem(`guessWhoBlocked_${roomCode}`) || '[]');
+        blocked.push(playerNameToKick);
+        localStorage.setItem(`guessWhoBlocked_${roomCode}`, JSON.stringify(blocked));
         
-        showNotification(`Игрок ${playerNameToKick} исключен из лобби`);
+        showNotification(`Игрок ${playerNameToKick} исключен`);
         updatePlayersList();
     }
 }
@@ -953,17 +862,15 @@ function kickPlayer(playerNameToKick) {
 function startGame() {
     console.log('🎲 Начало игры');
     
-    // Проверяем что игрок - хост
     if (!isHost) {
         showLobbyError(getTranslation('hostOnly'));
         return;
     }
     
-    // Получаем данные комнаты
     const roomData = getRoomData();
     const players = roomData?.players || [];
     
-    console.log('👥 Игроки для начала игры:', players);
+    console.log('👥 Игроков для старта:', players.length);
     
     if (players.length < 3) {
         showLobbyError(getTranslation('minPlayers'));
@@ -975,18 +882,16 @@ function startGame() {
         return;
     }
     
-    // ВЫБИРАЕМ СЛУЧАЙНУЮ КАРТУ ИЗ ВСЕХ ДОСТУПНЫХ
+    // Выбираем карту и шпиона
     const shuffledCards = [...gameCards].sort(() => 0.5 - Math.random());
-    const selectedCard = shuffledCards[0]; // Берем первую из перемешанных
-    
-    // Выбираем случайного шпиона
+    const selectedCard = shuffledCards[0];
     const spyIndex = Math.floor(Math.random() * players.length);
     const spyName = players[spyIndex].name;
     
-    console.log('🎴 Выбрана карта:', selectedCard.name);
-    console.log('🕵️ Выбран шпион:', spyName);
+    console.log('🎴 Карта:', selectedCard.name);
+    console.log('🕵️ Шпион:', spyName);
     
-    // Создаем состояние игры для всех игроков
+    // Состояние игры
     const gameStateForAll = {
         phase: 'role',
         timer: 180,
@@ -1004,16 +909,14 @@ function startGame() {
         createdAt: Date.now()
     };
     
-    // Сохраняем общее состояние игры
     localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameStateForAll));
     
-    console.log('💾 Состояние игры сохранено');
-    
+    playSound('start');
     startCountdown();
 }
 
 function startCountdown() {
-    console.log('⏱️ Начало отсчета');
+    console.log('⏱️ Отсчет');
     
     const countdownOverlay = document.createElement('div');
     countdownOverlay.id = 'countdownOverlay';
@@ -1056,7 +959,7 @@ function startCountdown() {
             
             setTimeout(() => {
                 countdownOverlay.remove();
-                console.log('➡️ Переход на play.html');
+                console.log('➡️ Переход в игру');
                 window.location.href = 'play.html';
             }, 1000);
         }
@@ -1067,39 +970,36 @@ function endGame() {
     console.log('🛑 Завершение игры');
     
     if (!isHost) {
-        showNotification('❗️ Только хост может завершить игру.');
+        showNotification('Только хост может завершить!');
         return;
     }
     
-    if (confirm('Вы уверены, что хотите завершить игру досрочно?')) {
-        // Удаляем комнату и состояние игры
+    if (confirm('Завершить игру досрочно?')) {
         localStorage.removeItem(`guessWhoRoom_${roomCode}`);
         localStorage.removeItem(`guessWhoGameState_${roomCode}`);
         localStorage.removeItem(`guessWhoBlocked_${roomCode}`);
         
-        console.log('✅ Игра завершена, переход на index.html');
+        console.log('✅ Игра завершена');
         window.location.href = 'index.html';
     }
 }
 
 // ===== ИГРОВЫЕ ФУНКЦИИ =====
 function showPlayerRole() {
-    console.log('🎭 Показ роли игрока');
+    console.log('🎭 Показ роли');
     
     if (!gameState) {
-        console.error('❌ Нет состояния игры');
+        console.error('❌ Нет состояния');
         return;
     }
     
-    // Определяем является ли текущий игрок шпионом
     gameState.isSpy = playerName === gameState.actualSpy;
     gameState.playerCard = gameState.isSpy ? '???' : gameState.correctCard;
     gameState.hasVoted = false;
     gameState.hasGuessed = false;
     gameState.readyPlayers = 0;
     
-    console.log('🎭 Роль игрока:', gameState.isSpy ? 'Шпион' : 'Игрок');
-    console.log('🎴 Карта для игры:', gameState.correctCard);
+    console.log('🎭 Роль:', gameState.isSpy ? 'Шпион' : 'Игрок');
     
     const roleHeader = document.getElementById('roleHeader');
     const roleTaskText = document.getElementById('roleTaskText');
@@ -1107,13 +1007,10 @@ function showPlayerRole() {
     const displayedCardName = document.getElementById('displayedCardName');
     const guessCardBtn = document.getElementById('guessCardBtn');
     
-    if (!roleHeader || !roleTaskText) {
-        console.log('❌ Элементы роли не найдены');
-        return;
-    }
+    if (!roleHeader || !roleTaskText) return;
     
     if (gameState.isSpy) {
-        console.log('🕵️ Настройка интерфейса для шпиона');
+        console.log('🕵️ Настройка для шпиона');
         roleHeader.innerHTML = `<h2>🥷 <span>Вы - Предатель!</span></h2>`;
         roleTaskText.innerHTML = `
             <li>Влиться в компанию остальных игроков</li>
@@ -1124,10 +1021,9 @@ function showPlayerRole() {
             displayedCardName.textContent = '???';
             displayedCardName.style.display = 'block';
         }
-        
         if (guessCardBtn) guessCardBtn.classList.remove('hidden');
     } else {
-        console.log('👤 Настройка интерфейса для игрока');
+        console.log('👤 Настройка для игрока');
         roleHeader.innerHTML = `<h2>👤 <span>Вы - Игрок</span></h2>`;
         roleTaskText.innerHTML = `
             <li>Найти предателя</li>
@@ -1135,7 +1031,6 @@ function showPlayerRole() {
             <li>Голосуйте и исключайте подозреваемых</li>
         `;
         
-        // Находим карту
         const card = gameCards.find(c => c.name === gameState.correctCard) || gameCards[0];
         
         if (displayedCardName) {
@@ -1145,7 +1040,6 @@ function showPlayerRole() {
             displayedCardName.style.fontSize = '1.8rem';
             displayedCardName.style.fontWeight = '700';
             displayedCardName.style.color = '#333';
-            displayedCardName.style.textShadow = '0 2px 4px rgba(0,0,0,0.1)';
         }
         
         if (playerCardImage) {
@@ -1172,13 +1066,11 @@ function updateReadyCounter() {
 }
 
 function closeRoleModal() {
-    console.log('✅ Закрытие модального окна роли');
+    console.log('✅ Закрытие окна роли');
     
     if (!gameState) return;
     
     gameState.readyPlayers = (gameState.readyPlayers || 0) + 1;
-    
-    // Сохраняем обновленное состояние
     localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameState));
     
     updateReadyCounter();
@@ -1197,7 +1089,7 @@ function closeRoleModal() {
 }
 
 function startGameTimer() {
-    console.log('⏰ Запуск таймера игры');
+    console.log('⏰ Запуск таймера');
     if (!gameState) return;
     
     gameState.phase = 'discussion';
@@ -1215,7 +1107,7 @@ function startGameTimer() {
 }
 
 function startVotingPhase() {
-    console.log('🗳️ Начало фазы голосования');
+    console.log('🗳️ Голосование');
     if (!gameState) return;
     
     gameState.phase = 'voting';
@@ -1268,18 +1160,16 @@ function setupVotingPlayers() {
     
     gameState.players.forEach(player => {
         if (player.name !== playerName) {
-            const playerVoteBtn = document.createElement('button');
-            playerVoteBtn.className = 'player-vote-btn';
-            playerVoteBtn.innerHTML = `
-                <i class="fas fa-user"></i>
-                <span>${player.name}</span>
-            `;
+            const btn = document.createElement('button');
+            btn.className = 'player-vote-btn';
+            btn.innerHTML = `<i class="fas fa-user"></i><span>${player.name}</span>`;
             
-            playerVoteBtn.addEventListener('click', () => {
-                voteForPlayer(player.name, playerVoteBtn);
+            btn.addEventListener('click', () => {
+                voteForPlayer(player.name, btn);
+                playSound('vote');
             });
             
-            playersToVote.appendChild(playerVoteBtn);
+            playersToVote.appendChild(btn);
         }
     });
 }
@@ -1310,10 +1200,7 @@ function setupGuessCards() {
     
     cardsGrid.innerHTML = '';
     
-    // Выбираем случайные 4 карты для угадывания
     const shuffledCards = [...gameCards].sort(() => 0.5 - Math.random()).slice(0, 4);
-    
-    // Убедимся, что правильная карта есть среди вариантов
     const correctCard = gameCards.find(c => c.name === gameState.correctCard);
     if (correctCard && !shuffledCards.some(c => c.name === correctCard.name)) {
         shuffledCards[0] = correctCard;
@@ -1326,7 +1213,7 @@ function setupGuessCards() {
         cardOption.innerHTML = `
             <div style="padding: 15px; text-align: center;">
                 <img src="${card.image}" alt="${card.name}" style="width: 100px; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; border: 2px solid #e1e5eb;">
-                <div style="font-weight: 700; font-size: 1em; color: #333; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">${card.name}</div>
+                <div style="font-weight: 700; font-size: 1em; color: #333;">${card.name}</div>
             </div>
         `;
         
@@ -1350,9 +1237,9 @@ function selectCard(card, cardElement) {
     closeModal('guessModal');
     
     if (isCorrect) {
-        endGameResult('spy', 'Предатель верно угадал карту.');
+        endGameResult('spy', 'Предатель верно угадал карту.', 'win');
     } else {
-        endGameResult('players', 'Предатель НЕ угадал карту.');
+        endGameResult('players', 'Предатель НЕ угадал карту.', 'lose');
     }
 }
 
@@ -1362,7 +1249,7 @@ function checkVotingResults() {
     const votedPlayers = Object.keys(gameState.votes);
     
     if (votedPlayers.length === 0) {
-        endGameResult('players', 'Никто не был исключен. Игроки победили!');
+        endGameResult('players', 'Никто не исключен. Игроки победили!', 'win');
         return;
     }
     
@@ -1378,19 +1265,21 @@ function checkVotingResults() {
     }
     
     if (excludedPlayer === gameState.actualSpy) {
-        endGameResult('players', `Игроки исключили предателя ${excludedPlayer}!`);
+        endGameResult('players', `Игроки исключили предателя ${excludedPlayer}!`, 'win');
     } else {
-        endGameResult('spy', `Игроки исключили мирного игрока ${excludedPlayer}. Предатель победил!`);
+        endGameResult('spy', `Игроки исключили мирного ${excludedPlayer}. Предатель победил!`, 'lose');
     }
 }
 
-function endGameResult(winner, reason) {
-    console.log('🏆 Результат игры:', winner, reason);
+function endGameResult(winner, reason, soundType) {
+    console.log('🏆 Результат:', winner, reason);
     
     if (gameState) {
         gameState.phase = 'ended';
         localStorage.setItem(`guessWhoGameState_${roomCode}`, JSON.stringify(gameState));
     }
+    
+    playSound(soundType === 'win' ? 'win' : 'lose');
     
     const resultModal = document.getElementById('resultModal');
     const resultTitle = document.getElementById('resultTitle');
