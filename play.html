@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра - Guess Who</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="images/icon.png">
+</head>
+<body class="game-body">
+    <!-- Окно с ролью -->
+    <div class="modal-overlay active" id="roleModal">
+        <div class="modal-content role-modal">
+            <div class="role-header" id="roleHeader">
+                <h2>👤 <span data-i18n="youAre">Вы - Игрок</span></h2>
+            </div>
+            <div class="role-content">
+                <!-- Карта игрока -->
+                <div class="card-display-role">
+                    <div class="card-image" id="playerCardImage">
+                        <img src="images/cards/1.png" alt="Карта" style="width: 250px; height: 300px; object-fit: cover; border-radius: 20px; border: 3px solid #4A90E2;">
+                    </div>
+                    <div class="card-name" id="displayedCardName" style="color: #333; font-size: 2rem; font-weight: 800; margin-top: 20px;">Лучницы</div>
+                </div>
+                
+                <!-- Задача -->
+                <div class="role-task">
+                    <h3 style="color: #333;">❔ <span data-i18n="yourTask">Ваша задача:</span></h3>
+                    <ul id="roleTaskText" style="color: #444; font-size: 1.1rem;">
+                        <li data-i18n="task1">Найти предателя</li>
+                        <li data-i18n="task2">Обсуждайте с другими игроками подозрительных</li>
+                        <li data-i18n="task3">Голосуйте и исключайте подозреваемых</li>
+                    </ul>
+                </div>
+                
+                <!-- Счетчик готовых игроков -->
+                <div class="ready-counter" id="readyCounter" style="text-align: center; margin: 30px 0; color: #333; font-weight: 600; font-size: 1.2rem;">
+                    <span data-i18n="readyCount">Запомнили карту:</span> 0/0
+                </div>
+            </div>
+            <button class="btn-remember" id="closeRoleBtn2" data-i18n="remember">Запомнил карту</button>
+        </div>
+    </div>
+
+    <!-- Страница обсуждения -->
+    <div class="main-card game-card hidden" id="discussionPage">
+        <!-- Заголовок этапа -->
+        <div class="game-phase" id="gamePhase">
+            <h2 style="color: #333;"><i class="fas fa-comments"></i> <span data-i18n="discussion">Обсуждение!</span></h2>
+            <p style="color: #666;" data-i18n="discussionText">Обсуждение длится 3 минуты. За это время последовательно каждый игрок называет факт о выданной карте.</p>
+        </div>
+
+        <!-- Таймер -->
+        <div class="timer-container">
+            <div class="timer" id="gameTimer">03:00</div>
+            <div class="timer-label" data-i18n="timeLeft">Осталось времени</div>
+        </div>
+
+        <!-- Подсказка -->
+        <div class="card-hint" style="color: #666; text-align: center; font-size: 1.1rem; margin-top: 30px;" data-i18n="cardHint">Не называйте карту прямо!</div>
+
+        <!-- Кнопка завершения игры (только для хоста) -->
+        <button class="btn-danger game-end-btn hidden" id="endGameBtn">
+            <i class="fas fa-stop-circle"></i> <span data-i18n="endGame">Завершить игру</span>
+        </button>
+    </div>
+
+    <!-- Страница голосования -->
+    <div class="main-card game-card hidden" id="votingPage">
+        <div class="voting-section">
+            <h3 style="color: #333;"><i class="fas fa-vote-yea"></i> <span data-i18n="votingTime">Время голосования!</span></h3>
+            <p style="color: #666;" data-i18n="votingText">Выберите ниже подозрительного вам игрока из представленных.</p>
+            
+            <div class="players-to-vote" id="playersToVote">
+                <!-- Игроки для голосования добавляются динамически -->
+            </div>
+            
+            <div class="timer-container small">
+                <div class="timer" id="voteTimer">00:30</div>
+                <div class="timer-label" data-i18n="voteTimeLeft">Осталось на голосование</div>
+            </div>
+
+            <!-- Кнопка угадать карту (только для предателя) -->
+            <button class="btn-guess hidden" id="guessCardBtn">
+                <i class="fas fa-search"></i> <span data-i18n="guessCard">Угадать карту</span>
+            </button>
+        </div>
+
+        <!-- Статус голосования -->
+        <div class="vote-status hidden" id="voteStatus">
+            <p style="color: #333;">✅ <span data-i18n="votedFor">Вы проголосовали за пользователя</span> <strong id="votedPlayer" style="color: #4A90E2;">Игрок 1</strong></p>
+            <p class="small-text" style="color: #666;" data-i18n="waitingVote">Ожидайте конца голосования...</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно угадывания карты -->
+    <div class="modal-overlay hidden" id="guessModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🔍 <span data-i18n="guessCardTitle">Угадать карту</span></h2>
+                <button class="close-modal" id="closeGuessBtn">&times;</button>
+            </div>
+            <div class="rules-text">
+                <p style="color: #333;" data-i18n="guessInstruction">Выберите карту, которая, по вашему мнению, у игроков:</p>
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Карты добавляются динамически -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно результатов -->
+    <div class="modal-overlay hidden" id="resultModal">
+        <div class="modal-content result-modal">
+            <div class="result-header" id="resultHeader">
+                <h2 id="resultTitle">🏆 Победа ИГРОКОВ!</h2>
+            </div>
+            <div class="result-content">
+                <p id="resultReason" style="font-size: 1.2rem; margin: 20px 0;">Игроки исключили предателя.</p>
+            </div>
+            <button class="btn-back-lobby" id="backToLobbyBtn" data-i18n="backToLobby">Вернуться в лобби</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

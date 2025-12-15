@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess Who - Clash Royale</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="images/icon.png">
+</head>
+<body>
+    <!-- Шапка -->
+    <div class="header">
+        <button class="btn-small" id="langBtn">
+            <img src="images/flags/russia.png" alt="Ru" class="flag-icon" id="flagIcon">
+            <span id="langText">Ru</span>
+        </button>
+        <button class="btn-small" id="rulesBtn"><i class="fas fa-question-circle"></i> <span data-i18n="rules">Правила</span></button>
+    </div>
+
+    <!-- Главный заголовок -->
+    <div class="main-title">
+        <h1 class="title-text">
+            <img src="images/icon.png" alt="Clash Royale" class="game-icon">
+            <span id="titleText">Guess Who - Clash Royale</span>
+        </h1>
+        <p class="subtitle" data-i18n="subtitle">Увлекательная игра шпион по мотивам игры Clash Royale для 3-6 игроков.</p>
+    </div>
+
+    <!-- Основная плашка -->
+    <div class="main-card">
+        <!-- Поле для имени -->
+        <div class="input-group">
+            <input type="text" id="playerName" class="input-field" placeholder="Введите имя..." maxlength="12">
+            <div class="input-hint" data-i18n="nameHint">1-12 символов, только буквы и цифры</div>
+        </div>
+
+        <!-- Кнопка создания комнаты -->
+        <button class="btn-primary" id="createRoomBtn">
+            <i class="fas fa-plus-circle"></i> <span data-i18n="createRoom">Создать комнату</span>
+        </button>
+
+        <!-- Разделитель -->
+        <div class="divider" data-i18n="or">или</div>
+
+        <!-- Присоединение по коду -->
+        <div class="input-group">
+            <input type="text" id="roomCode" class="input-field" placeholder="Введите код комнаты..." maxlength="6">
+            <button class="btn-secondary" id="joinRoomBtn" data-i18n="join">Присоединиться</button>
+        </div>
+    </div>
+
+    <!-- Нижние кнопки -->
+    <div class="footer-buttons">
+        <a href="https://t.me/GuessWhoMiniGame" target="_blank" class="footer-btn">
+            <i class="fab fa-telegram"></i> <span data-i18n="channel">Наш канал</span>
+        </a>
+        <a href="https://dalink.to/guesswhominigame" target="_blank" class="footer-btn">
+            <i class="fas fa-donate"></i> <span data-i18n="support">Поддержать проект</span>
+        </a>
+        <a href="https://t.me/GuessWhoClashRoyaleHELP" target="_blank" class="footer-btn">
+            <i class="fas fa-lightbulb"></i> <span data-i18n="idea">Предложить идею</span>
+        </a>
+        <a href="https://t.me/GuessWhoClashRoyaleHELP" target="_blank" class="footer-btn">
+            <i class="fas fa-cogs"></i> <span data-i18n="techSupport">Тех.поддержка</span>
+        </a>
+    </div>
+
+    <!-- Дисклеймер -->
+    <div class="disclaimer">
+        <p data-i18n="disclaimer">Этот контент не является официальным продуктом компании Supercell и не поддерживается ею. Для получения дополнительной информации посетите официальный сайт Supercell: <a href="https://supercell.com" target="_blank">https://supercell.com</a></p>
+    </div>
+
+    <!-- Модальное окно правил -->
+    <div class="modal-overlay" id="rulesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">❓ <span data-i18n="rulesTitle">Правила игры</span></h2>
+                <button class="close-modal" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="rules-text" data-i18n="rulesText">
+                <!-- Текст правил -->
+            </div>
+            <button class="btn-clear" id="closeRulesBtn" data-i18n="clear">Ясно</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно ошибки имени -->
+    <div class="modal-overlay" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⚠️ <span data-i18n="error">Ошибка</span></h2>
+                <button class="close-modal" id="closeErrorBtn">&times;</button>
+            </div>
+            <div class="rules-text">
+                <p data-i18n="nameError">❗️Имя должно содержать 1-12 символов.</p>
+            </div>
+            <button class="btn-clear" id="closeErrorBtn2" data-i18n="clear">Понятно</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лобби - Guess Who</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="images/icon.png">
+</head>
+<body>
+    <!-- Шапка -->
+    <div class="header">
+        <button class="btn-small" id="langBtn">
+            <img src="images/flags/russia.png" alt="Ru" class="flag-icon" id="flagIcon">
+            <span id="langText">Ru</span>
+        </button>
+        <button class="btn-small" id="backBtn"><i class="fas fa-arrow-left"></i> <span data-i18n="back">Назад</span></button>
+    </div>
+
+    <!-- Основная плашка лобби -->
+    <div class="main-card lobby-card">
+        <h2 class="section-title" data-i18n="lobby">Лобби</h2>
+        
+        <!-- Код лобби -->
+        <div class="code-display">
+            <span data-i18n="lobbyCode">Код лобби:</span>
+            <div class="code" id="roomCodeDisplay">XXXX</div>
+            <button class="btn-icon" id="copyCodeBtn" title="Скопировать код">
+                <i class="fas fa-copy"></i> <span data-i18n="copy">Копировать</span>
+            </button>
+        </div>
+
+        <!-- Выбор режима игры -->
+        <div class="game-mode-section">
+            <h3 data-i18n="gameMode">Режим игры:</h3>
+            <div class="mode-selector">
+                <div class="mode-option active" data-mode="classic">
+                    <div class="mode-icon">👑</div>
+                    <div class="mode-title">Классический</div>
+                    <div class="mode-description">1 предатель, у остальных одна карта</div>
+                </div>
+                <div class="mode-option" data-mode="random">
+                    <div class="mode-icon">🎲</div>
+                    <div class="mode-title">Рандом</div>
+                    <div class="mode-description">Полная хаотичность!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список игроков -->
+        <div class="players-section">
+            <h3 data-i18n="players">Игроки <span id="playersCount">0</span>/6</h3>
+            <div class="players-list" id="playersList">
+                <!-- Игроки добавляются динамически -->
+            </div>
+        </div>
+
+        <!-- Кнопка приглашения -->
+        <button class="btn-secondary" id="inviteBtn">
+            <i class="fas fa-user-plus"></i> <span data-i18n="invite">Пригласить друга</span>
+        </button>
+
+        <!-- Кнопка начала игры -->
+        <button class="btn-primary btn-large" id="startGameBtn">
+            <i class="fas fa-play"></i> <span data-i18n="startGame">Начать игру!</span>
+        </button>
+    </div>
+
+    <!-- Модальное окно приглашения -->
+    <div class="modal-overlay" id="inviteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🔗 <span data-i18n="inviteFriend">Пригласить друга</span></h2>
+                <button class="close-modal" id="closeInviteBtn">&times;</button>
+            </div>
+            <div class="rules-text">
+                <p data-i18n="inviteText">Скопируйте ссылку ниже и отправьте другу:</p>
+                <div class="invite-link">
+                    <input type="text" id="inviteLink" readonly value="">
+                    <button class="btn-icon" id="copyLinkBtn">
+                        <i class="fas fa-copy"></i> <span data-i18n="copy">Копировать</span>
+                    </button>
+                </div>
+                <p class="small-text" data-i18n="inviteHint">Или просто сообщите код комнаты</p>
+            </div>
+            <button class="btn-clear" id="closeInviteBtn2" data-i18n="done">Готово</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно ошибки -->
+    <div class="modal-overlay" id="lobbyErrorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⚠️ <span data-i18n="warning">Внимание</span></h2>
+                <button class="close-modal" id="closeLobbyErrorBtn">&times;</button>
+            </div>
+            <div class="rules-text">
+                <p id="lobbyErrorText"></p>
+            </div>
+            <button class="btn-clear" id="closeLobbyErrorBtn2" data-i18n="clear">Понятно</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
